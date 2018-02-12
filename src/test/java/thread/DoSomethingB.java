@@ -10,10 +10,17 @@ public class DoSomethingB {
 		return doSomethingB;
 	}
 
+	static int i = 0;
+
 	void doSomething(String corpCode) {
 		System.out.println("进入BBBBBB");
 		synchronized (corpCode) {
-			System.out.println("执行BBBBBB");
+			System.out.println("执行BBBBBB" + i++);
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 
 	}
