@@ -17,7 +17,7 @@ public class DoSomethingA {
 		synchronized (corpCode) {
 			System.out.println("执行AAAAAA" + i++);
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(500);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
