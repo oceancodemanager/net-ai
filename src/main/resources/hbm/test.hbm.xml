@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<hibernate-mapping auto-import="true" default-lazy="false" package="">
+    <class name="com.dayee.wintalent.report.test.TxEntity" table="t_tx_test">
+        <id name="uniqueKey" column="F_ID" type="int" />
+        <property name="name"  column="F_NAME"/>
+    </class>
+    <class name="com.dayee.wintalent.report.test.TpEntity" table="t_tp_test">
+        <id name="uniqueKey" column="F_ID" type="int" />
+    </class>
+</hibernate-mapping>
