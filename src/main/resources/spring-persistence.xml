@@ -13,8 +13,8 @@ http://www.springframework.org/schema/aop/spring-aop.xsd">
 
 	<bean id="myDataSource" class="org.apache.commons.dbcp2.BasicDataSource"
 		destroy-method="close">
-		<property name="driverClassName" value="org.hsqldb.jdbcDriver" />
-		<property name="url" value="jdbc:MySQL://localhost:3306" />
+		<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="url" value="jdbc:MySQL://localhost:3306/dayee8trans?serverTimezone=UTC" />
 		<property name="username" value="root" />
 		<property name="password" value="manage" />
 	</bean>
