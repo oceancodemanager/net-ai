@@ -56,10 +56,15 @@ public class RegTest {
 		}
 	}
 
-	public static void main(String[] args) {
+	static void test5() {
+		String MOBILE_AGENT = "iPod|Android|iPhone|Windows Phone|MQQBrowser";
 
-		String remark = "html<br>js<script>alert(1);</script>";
-		remark = remark.replaceAll("<script.+>", "");
-		System.out.println("remark:" + remark);
+		Pattern MOBILE_AGENT_PATTERN = Pattern.compile(MOBILE_AGENT, Pattern.CASE_INSENSITIVE);
+	}
+
+	public static void main(String[] args) {
+		String s = "ssssss";
+		String a = s.substring(0, 0);
+		System.out.println("a：" + a);
 	}
 }
