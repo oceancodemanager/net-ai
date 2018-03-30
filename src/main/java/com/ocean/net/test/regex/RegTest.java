@@ -83,7 +83,10 @@ public class RegTest {
 	static void test6() {
 		String MOBILE_AGENT = "(iPod|Android|iPhone|Windows Phone|MQQBrowser).*(MOBILE)";
 		Pattern p = Pattern.compile(MOBILE_AGENT, Pattern.CASE_INSENSITIVE);
-		String andriodPad = "Mozilla/5.0 (Linux; Android 6.0.1; Nexus 10 Build/MOB31T) AppleWebKit/537.36  (KHTML, like Gecko)Chrome/65.0.3325.181 Safari/537.36";
+		// String andriodPad = "Mozilla/5.0 (Linux; Android 6.0.1; Nexus 10
+		// Build/MOB31T) AppleWebKit/537.36 mobile (KHTML, like
+		// Gecko)Chrome/65.0.3325.181 Safari/537.36";
+		String andriodPad = "IPOD  MOBILE";
 		Matcher m = p.matcher(andriodPad); // 获取 matcher 对象
 		System.out.println("result:" + m.find());
 		// while (m.find()) {
