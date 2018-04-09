@@ -19,8 +19,6 @@ public class TxDaoImpl {
 		entity.setName("sss");
 		hibernateTemplate.save(entity);
 		logger.debug("save over:" + entity);
-		logger.debug("save over:" + entity);
-
 	}
 	// JAVA8 LUMDA表达式
 	// return hibernateTemplateMysql.execute((Session session)-> {
