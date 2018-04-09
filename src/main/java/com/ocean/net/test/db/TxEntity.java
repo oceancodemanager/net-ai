@@ -1,6 +1,11 @@
 package com.ocean.net.test.db;
 
 public class TxEntity implements java.io.Serializable {
+	@Override
+	public String toString() {
+		return "TxEntity [id=" + id + ", name=" + name + "]";
+	}
+
 	/**
 	 * 
 	 */
