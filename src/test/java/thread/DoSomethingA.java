@@ -14,7 +14,7 @@ public class DoSomethingA {
 
 	void doSomething(String corpCode) {
 		System.out.println("进入AAAAAA");
-		synchronized (corpCode) {
+		synchronized ((corpCode)) {
 			System.out.println("执行AAAAAA" + i++);
 			try {
 				Thread.sleep(500);
