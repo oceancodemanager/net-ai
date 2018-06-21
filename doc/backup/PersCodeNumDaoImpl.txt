@@ -1,0 +1,180 @@
+
+package com.dayee.wintalent.candidates.dao;
+
+import java.text.NumberFormat;
+import java.util.ArrayDeque;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+import org.apache.commons.lang3.RandomUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import com.dayee.wintalent.framework.context.ApplicationContext;
+import com.dayee.wintalent.framework.context.CurrentThreadContext;
+import com.dayee.wintalent.framework.dao.jdbc.MappingDaoImpl;
+import com.dayee.wintalent.framework.dao.jdbc.Sql;
+import com.dayee.wintalent.framework.utils.CollectionUtils;
+import com.dayee.wintalent.framework.utils.CriterionUtils;
+
+public class PersCodeNumDaoImpl extends MappingDaoImpl
+        implements PersCodeNumDao {
+
+    private static final Log                            logger              = LogFactory
+            .getLog(PersCodeNumDaoImpl.class);
+
+    private static HashMap<String, Lock>                corpNumberIdLockMap = new HashMap<String, Lock>();
+
+    private static HashMap<String, ArrayDeque<Integer>> corpNumberIdMap     = new HashMap<String, ArrayDeque<Integer>>();
+
+    private static NumberFormat                         formatter           = NumberFormat
+            .getNumberInstance();
+
+    private static String                               INSER_SQL;
+
+    private static final int                            MAX_ID              = 999999;
+    static {
+
+        formatter.setMinimumIntegerDigits(String.valueOf(MAX_ID).length());
+        formatter.setGroupingUsed(false);
+        for (String corpCode : CandidatesPersonIdFactory.numberIdCorpList) {
+            corpNumberIdLockMap.put(corpCode, new ReentrantLock());
+            corpNumberIdMap.put(corpCode, new ArrayDeque<Integer>());
+        }
+        // 超过6位时每次批量增加的sql
+        StringBuilder sql = new StringBuilder();
+        sql.append("insert into t_pers_code_num (F_IS_USE) values (1)");
+        for (int i = 1; i < 10000; i++) {
+            sql.append(",(1)");
+        }
+        INSER_SQL = sql.toString();
+    }
+
+    private static final String SELECT_PERS_CODE_NUM = "select F_ID from t_pers_code_num where F_IS_USE=1 order by rand() limit 1000";
+
+    private static final String UPDATE_PERS_CODE_NUM = "update t_pers_code_num set F_IS_USE=0 where F_ID=?";
+
+    private static final String EXSITS_PERS_CODE     = "select count(f_id) as C_P from t_report_resume where F_PERS_CODE =?";
+
+    @Override
+    public String newPersCodeNum() {
+
+        // long m = System.currentTimeMillis();
+        String corpCode = CurrentThreadContext.getAlias();
+        Lock lock = corpNumberIdLockMap.get(corpCode);
+        lock.lock();
+        try {
+            ArrayDeque<Integer> numberList = corpNumberIdMap.get(corpCode);
+            logger.debug("numberList_a:" + numberList.size());
+            if (numberList.isEmpty()) {
+                List<Map<String, Integer>> idMapList = super.queryForList(SELECT_PERS_CODE_NUM);
+                logger.debug("idMapList:" + idMapList.size());
+                if (CollectionUtils.isEmpty(idMapList)) {
+                    super.update(INSER_SQL);
+                } else {
+                    for (Map<String, Integer> map : idMapList) {
+                        Integer id = map.get(Sql.F_ID);
+                        numberList.offer(id);
+                    }
+                    logger.debug("numberList_b:" + numberList.size());
+                    Integer num = numberList.poll();
+                    if (num != null) {
+                        String persCode = genPersCodeByNum(num);
+                        if (persCode != null) {
+                            return persCode;
+                        }
+                    }
+                }
+            } else {
+                Integer num = numberList.poll();
+                if (num != null) {
+                    String persCode = genPersCodeByNum(num);
+                    if (persCode != null) {
+                        return persCode;
+                    }
+                }
+            }
+        } finally {
+            lock.unlock();
+            // logger.debug("用时：" + (System.currentTimeMillis() - m));
+        }
+        return newPersCodeNum();
+    }
+
+    /**
+     * 将poll出来的数字设置成已使用</br>
+     * 查询t_rreport_resume中是否已经有此F_PERS_CODE，如果不是新的就返回null，上层方法继续生成新的数字
+     * 
+     * @param num
+     * @return
+     */
+    private String genPersCodeByNum(Integer num) {
+
+        super.update(UPDATE_PERS_CODE_NUM, num);
+        String persCode = null;
+        if (num != null && num > MAX_ID) {
+            persCode = String.valueOf(num);
+        } else {
+            persCode = formatter.format(num);
+        }
+        Map<String, Long> map = super.queryForMap(EXSITS_PERS_CODE, persCode);
+        if (map != null) {
+            Long count = map.get("C_P");
+            if (count != null && count.intValue() != 0) {
+                persCode = null;
+            }
+        }
+        return persCode;
+    }
+
+    private static HashMap<String, ArrayDeque<String>> corpNumberIdStrMap       = new HashMap<String, ArrayDeque<String>>();
+
+    private static final String                        SELECT_EXSISTS_PERS_CODE = "select F_PERS_CODE from t_report_resume where ";
+
+    @Deprecated
+    private static String getNumberPersCodeByProgram() {
+
+        String corpCode = CurrentThreadContext.getAlias();
+        Lock lock = corpNumberIdLockMap.get(corpCode);
+        lock.lock();
+        try {
+            ArrayDeque<String> numberList = corpNumberIdStrMap.get(corpCode);
+            if (numberList.isEmpty()) {
+                Set<String> set = new HashSet<String>(200);
+                for (int i = 0; i < 200; i++) {
+                    int num = RandomUtils.nextInt(1, MAX_ID);
+                    set.add(formatter.format(num));
+                }
+                logger.error("set1:" + set);
+                Map<String, String> map = ApplicationContext.getMappingDao()
+                        .queryForMap(SELECT_EXSISTS_PERS_CODE + CriterionUtils
+                                .createInJunction("F_PERS_CODE", set)
+                                .toString());
+                if (!map.isEmpty()) {
+                    Collection<String> exsistCodeList = map.values();
+                    logger.error("map.values():" + exsistCodeList);
+                    if (CollectionUtils.isNotEmpty(exsistCodeList)) {
+                        set.removeAll(exsistCodeList);
+                    }
+                }
+                logger.error("set2:" + set);
+                numberList.addAll(set);
+                if (numberList.isEmpty()) {
+                    return getNumberPersCodeByProgram();
+                } else {
+                    return numberList.poll();
+                }
+            } else {
+                return numberList.poll();
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+}
